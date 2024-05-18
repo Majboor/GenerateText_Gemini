@@ -2,6 +2,7 @@ const promptInput = document.getElementById("userInput");
 const chatContainer = document.getElementById("chatContainer");
 const typingIndicator = document.getElementById("typingIndicator");
 
+
 async function sendMessage() {
   const prompt = promptInput.value.trim();
   if (!prompt) {
@@ -56,15 +57,29 @@ async function generateText(prompt) {
   }
 }
 
+
 function addMessage(text, type) {
   const messageDiv = document.createElement("div");
   messageDiv.className = `message ${type}`;
-  messageDiv.innerHTML = `<div class="message-bubble fadeIn">${text}</div>`;
+  messageDiv.innerHTML = `<div class="message-bubble fadeIn"></div>`;
   chatContainer.appendChild(messageDiv);
-
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  hideTypingIndicator();
+  let i = 0;
+  const messageBubble = messageDiv.querySelector('.message-bubble');
+  const interval = setInterval(() => {
+      if (i < text.length) {
+          if (text.charAt(i) === '\n') {
+              messageBubble.innerHTML += '<br>';
+          } else {
+              messageBubble.innerHTML += text.charAt(i);
+          }
+          i++;
+      } else {
+          clearInterval(interval);
+          hideTypingIndicator();
+      }
+  }, 50); // Adjust speed of typing here
 }
 
 let typingTimeout;
@@ -86,4 +101,27 @@ function handleKeyPress(event) {
   }
 }
 
-window.onload = () => addMessage("Hello! How can I assist you today?", 'bot');
+// Assuming chatContainer is the element to hover over
+chatContainer.addEventListener('mouseover', () => {
+  showTypingIndicator();
+
+  // Set a timeout to simulate typing delay for the user message
+  setTimeout(() => {
+      const defaultUserMessage = "Hi, what are Digital Software Market's AI services?";
+      addMessage(defaultUserMessage, 'user');
+
+      // Wait for the user message to finish typing before showing the bot response
+      const userMessageInterval = 50 * defaultUserMessage.length; // Calculate the time taken to type the user message
+      setTimeout(() => {
+          // Show typing indicator again for bot response
+          showTypingIndicator();
+
+          // Set another timeout to simulate typing delay for the bot response
+          setTimeout(() => {
+              const hardcodedBotResponse = "Hello I am Digital Software Market's Chatbot,here is a list of all our AI development services<br>1. Custom AI model development<br>2. AI-driven data analysis<br>3. Automated AI workflows<br>4. AI integration services<br>5. Machine learning solutions<br>Digital Software Market offers a comprehensive range of AI services tailored to meet your business needs.";
+              addMessage(hardcodedBotResponse.replace(/<br>/g, '\n'), 'bot');
+          }, 1000); // Delay for bot message
+      }, userMessageInterval); // Wait until user message is fully typed
+  }, 1000); // Delay for user message
+}, { once: true }); // This ensures the event only fires once
+
